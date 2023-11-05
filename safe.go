@@ -8,21 +8,19 @@ import (
 	"net/http"
 )
 
-const apiUrl = "https://test-sns-api.seedao.tech"
-
-func IsSafe(name string) bool {
+func IsSafe(name, apiUrl string) bool {
 	return checkReq(fmt.Sprintf("%s/v1/is_sensitive", apiUrl), name)
 }
 
-func Safe(name []string) []string {
+func Safe(name []string, apiUrl string) []string {
 	return replaceReq(fmt.Sprintf("%s/v1/sensitive", apiUrl), name)
 }
 
-func IsAvailable(name string) bool {
+func IsAvailable(name, apiUrl string) bool {
 	return checkReq(fmt.Sprintf("%s/v1/is_unavailable", apiUrl), name)
 }
 
-func Available(name []string) []string {
+func Available(name []string, apiUrl string) []string {
 	return replaceReq(fmt.Sprintf("%s/v1/unavailable", apiUrl), name)
 }
 

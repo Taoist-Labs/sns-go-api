@@ -12,11 +12,6 @@ import (
 	"github.com/forta-network/go-multicall"
 )
 
-const (
-	RPC                = "https://eth-sepolia.g.alchemy.com/v2/H43zK7UnIN2v7u2ZoTbizIPnXkylKIZl"
-	publicResolverAddr = "0x4ffCfd37C362B415E4c4A607815f5dB6A297Ed8A"
-)
-
 const publicResolverABI = `[
   {
     "inputs": [
@@ -58,11 +53,7 @@ const publicResolverABI = `[
   }
 ]`
 
-func Resolve(sns string) (addr string) {
-	return ResolveWithRPC(sns, RPC)
-}
-
-func ResolveWithRPC(sns, rpc string) (addr string) {
+func Resolve(sns, publicResolverAddr, rpc string) (addr string) {
 	c, err := ethclient.Dial(rpc)
 	if err != nil {
 		return ""
@@ -90,11 +81,7 @@ type addrOutput struct {
 	Addr common.Address
 }
 
-func Resolves(sns []string) []string {
-	return ResolvesWithRPC(sns, RPC)
-}
-
-func ResolvesWithRPC(sns []string, rpc string) (addr []string) {
+func Resolves(sns []string, publicResolverAddr, rpc string) (addr []string) {
 	m, err := multicall.Dial(context.Background(), rpc)
 	if err != nil {
 		return
@@ -126,11 +113,7 @@ func ResolvesWithRPC(sns []string, rpc string) (addr []string) {
 	return
 }
 
-func Name(addr string) (sns string) {
-	return NameWithRPC(addr, RPC)
-}
-
-func NameWithRPC(addr, rpc string) (sns string) {
+func Name(addr, publicResolverAddr, rpc string) (sns string) {
 	c, err := ethclient.Dial(rpc)
 	if err != nil {
 		return ""
@@ -159,11 +142,7 @@ type nameOutput struct {
 	Name string
 }
 
-func Names(addr []string) []string {
-	return NamesWithRPC(addr, RPC)
-}
-
-func NamesWithRPC(addr []string, rpc string) (sns []string) {
+func Names(addr []string, publicResolverAddr, rpc string) (sns []string) {
 	m, err := multicall.Dial(context.Background(), rpc)
 	if err != nil {
 		return
