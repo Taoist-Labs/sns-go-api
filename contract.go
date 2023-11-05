@@ -1,6 +1,7 @@
 package sns_go_api
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -8,12 +9,54 @@ import (
 	namehash "github.com/Taoist-Labs/sns-go-namehash"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/forta-network/go-multicall"
 )
 
 const (
 	RPC                = "https://eth-sepolia.g.alchemy.com/v2/H43zK7UnIN2v7u2ZoTbizIPnXkylKIZl"
 	publicResolverAddr = "0x4ffCfd37C362B415E4c4A607815f5dB6A297Ed8A"
 )
+
+const publicResolverABI = `[
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "node",
+        "type": "bytes32"
+      }
+    ],
+    "name": "addr",
+    "outputs": [
+      {
+        "internalType": "address payable",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "node",
+        "type": "bytes32"
+      }
+    ],
+    "name": "name",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]`
 
 func Resolve(sns string) (addr string) {
 	return ResolveWithRPC(sns, RPC)
@@ -40,6 +83,46 @@ func ResolveWithRPC(sns, rpc string) (addr string) {
 	}
 
 	addr = commonAddr.Hex()
+	return
+}
+
+type addrOutput struct {
+	Addr common.Address
+}
+
+func Resolves(sns []string) []string {
+	return ResolvesWithRPC(sns, RPC)
+}
+
+func ResolvesWithRPC(sns []string, rpc string) (addr []string) {
+	m, err := multicall.Dial(context.Background(), rpc)
+	if err != nil {
+		return
+	}
+
+	c, err := multicall.NewContract(publicResolverABI, publicResolverAddr)
+	if err != nil {
+		return
+	}
+
+	var calls []*multicall.Call
+	for _, s := range sns {
+		// convert 'namehash' result to [32]bytes
+		bytes, _ := common.ParseHexOrString(namehash.Namehash(s))
+		node := [32]byte{}
+		copy(node[:], bytes)
+
+		calls = append(calls, c.NewCall(new(addrOutput), "addr", node))
+	}
+
+	result, err := m.Call(nil, calls...)
+	if err != nil {
+		return
+	}
+
+	for _, r := range result {
+		addr = append(addr, r.Outputs.(*addrOutput).Addr.Hex())
+	}
 	return
 }
 
@@ -70,4 +153,46 @@ func NameWithRPC(addr, rpc string) (sns string) {
 	}
 
 	return sns
+}
+
+type nameOutput struct {
+	Name string
+}
+
+func Names(addr []string) []string {
+	return NamesWithRPC(addr, RPC)
+}
+
+func NamesWithRPC(addr []string, rpc string) (sns []string) {
+	m, err := multicall.Dial(context.Background(), rpc)
+	if err != nil {
+		return
+	}
+
+	c, err := multicall.NewContract(publicResolverABI, publicResolverAddr)
+	if err != nil {
+		return
+	}
+
+	var calls []*multicall.Call
+	for _, a := range addr {
+		// append `.addr.reverse` for `addr`
+		reverseAddr := fmt.Sprintf("%s.addr.reverse", strings.ToLower(a[2:]))
+		// convert 'namehash' result to [32]bytes
+		bytes, _ := common.ParseHexOrString(namehash.Namehash(reverseAddr))
+		node := [32]byte{}
+		copy(node[:], bytes)
+
+		calls = append(calls, c.NewCall(new(nameOutput), "name", node))
+	}
+
+	result, err := m.Call(nil, calls...)
+	if err != nil {
+		return
+	}
+
+	for _, r := range result {
+		sns = append(sns, r.Outputs.(*nameOutput).Name)
+	}
+	return
 }
