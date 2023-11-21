@@ -1,9 +1,14 @@
 package sns_go_api
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"strings"
+	"time"
 
 	snsgen "github.com/Taoist-Labs/sns-go-api/sns"
 	namehash "github.com/Taoist-Labs/sns-go-namehash"
@@ -53,7 +58,15 @@ const publicResolverABI = `[
   }
 ]`
 
-func Resolve(sns, publicResolverAddr, rpc string) (addr string) {
+func Resolve(sns, indexerHost, rpc, publicResolverAddr string) (addr string) {
+	node := namehash.Namehash(sns)
+
+	var err error
+	err, addr = getTimeout(fmt.Sprintf("%s/sns/resolver/get_address?node=%s", indexerHost, node))
+	if err == nil {
+		return
+	}
+
 	c, err := ethclient.Dial(rpc)
 	if err != nil {
 		return ""
@@ -64,11 +77,11 @@ func Resolve(sns, publicResolverAddr, rpc string) (addr string) {
 	}
 
 	// convert 'namehash' result to [32]bytes
-	bytes, _ := common.ParseHexOrString(namehash.Namehash(sns))
-	node := [32]byte{}
-	copy(node[:], bytes)
+	b, _ := common.ParseHexOrString(node)
+	nb := [32]byte{}
+	copy(nb[:], b)
 
-	commonAddr, err := s.Addr(nil, node)
+	commonAddr, err := s.Addr(nil, nb)
 	if err != nil {
 		return ""
 	}
@@ -81,7 +94,18 @@ type addrOutput struct {
 	Addr common.Address
 }
 
-func Resolves(sns []string, publicResolverAddr, rpc string) (addr []string) {
+func Resolves(sns []string, indexerHost, rpc, publicResolverAddr string) (addr []string) {
+	nodes := make([]string, len(sns))
+	for i, s := range sns {
+		nodes[i] = namehash.Namehash(s)
+	}
+
+	var err error
+	err, addr = postTimeout(fmt.Sprintf("%s/sns/resolver/get_addresses", indexerHost), nodes)
+	if err == nil {
+		return
+	}
+
 	m, err := multicall.Dial(context.Background(), rpc)
 	if err != nil {
 		return
@@ -93,13 +117,13 @@ func Resolves(sns []string, publicResolverAddr, rpc string) (addr []string) {
 	}
 
 	var calls []*multicall.Call
-	for _, s := range sns {
+	for _, n := range nodes {
 		// convert 'namehash' result to [32]bytes
-		bytes, _ := common.ParseHexOrString(namehash.Namehash(s))
-		node := [32]byte{}
-		copy(node[:], bytes)
+		b, _ := common.ParseHexOrString(n)
+		nb := [32]byte{}
+		copy(nb[:], b)
 
-		calls = append(calls, c.NewCall(new(addrOutput), "addr", node))
+		calls = append(calls, c.NewCall(new(addrOutput), "addr", nb))
 	}
 
 	result, err := m.Call(nil, calls...)
@@ -113,7 +137,15 @@ func Resolves(sns []string, publicResolverAddr, rpc string) (addr []string) {
 	return
 }
 
-func Name(addr, publicResolverAddr, rpc string) (sns string) {
+func Name(addr, indexerHost, rpc, publicResolverAddr string) (sns string) {
+	node := namehash.Namehash(fmt.Sprintf("%s.addr.reverse", strings.ToLower(addr[2:])))
+
+	var err error
+	err, sns = getTimeout(fmt.Sprintf("%s/sns/resolver/get_name?node=%s", indexerHost, node))
+	if err == nil {
+		return
+	}
+
 	c, err := ethclient.Dial(rpc)
 	if err != nil {
 		return ""
@@ -124,13 +156,12 @@ func Name(addr, publicResolverAddr, rpc string) (sns string) {
 	}
 
 	// append `.addr.reverse` for `addr`
-	addr = fmt.Sprintf("%s.addr.reverse", strings.ToLower(addr[2:]))
 	// convert 'namehash' result to [32]bytes
-	bytes, _ := common.ParseHexOrString(namehash.Namehash(addr))
-	node := [32]byte{}
-	copy(node[:], bytes)
+	b, _ := common.ParseHexOrString(node)
+	nb := [32]byte{}
+	copy(nb[:], b)
 
-	sns, err = s.Name(nil, node)
+	sns, err = s.Name(nil, nb)
 	if err != nil {
 		return ""
 	}
@@ -142,7 +173,18 @@ type nameOutput struct {
 	Name string
 }
 
-func Names(addr []string, publicResolverAddr, rpc string) (sns []string) {
+func Names(addr []string, indexerHost, rpc, publicResolverAddr string) (sns []string) {
+	nodes := make([]string, len(addr))
+	for i, a := range addr {
+		nodes[i] = namehash.Namehash(fmt.Sprintf("%s.addr.reverse", strings.ToLower(a[2:])))
+	}
+
+	var err error
+	err, sns = postTimeout(fmt.Sprintf("%s/sns/resolver/get_names", indexerHost), nodes)
+	if err == nil {
+		return
+	}
+
 	m, err := multicall.Dial(context.Background(), rpc)
 	if err != nil {
 		return
@@ -154,15 +196,13 @@ func Names(addr []string, publicResolverAddr, rpc string) (sns []string) {
 	}
 
 	var calls []*multicall.Call
-	for _, a := range addr {
-		// append `.addr.reverse` for `addr`
-		reverseAddr := fmt.Sprintf("%s.addr.reverse", strings.ToLower(a[2:]))
+	for _, n := range nodes {
 		// convert 'namehash' result to [32]bytes
-		bytes, _ := common.ParseHexOrString(namehash.Namehash(reverseAddr))
-		node := [32]byte{}
-		copy(node[:], bytes)
+		b, _ := common.ParseHexOrString(n)
+		nb := [32]byte{}
+		copy(nb[:], b)
 
-		calls = append(calls, c.NewCall(new(nameOutput), "name", node))
+		calls = append(calls, c.NewCall(new(nameOutput), "name", nb))
 	}
 
 	result, err := m.Call(nil, calls...)
@@ -174,4 +214,52 @@ func Names(addr []string, publicResolverAddr, rpc string) (sns []string) {
 		sns = append(sns, r.Outputs.(*nameOutput).Name)
 	}
 	return
+}
+
+func getTimeout(url string) (error, string) {
+	client := &http.Client{Timeout: 1 * time.Second}
+
+	resp, err := client.Get(url)
+	if err != nil {
+		return err, ""
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("request indexer failed: %d", resp.StatusCode), ""
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err, ""
+	}
+
+	return nil, string(body)
+}
+
+func postTimeout(url string, param []string) (error, []string) {
+	client := &http.Client{Timeout: 1 * time.Second}
+
+	body, err := json.Marshal(param)
+	if err != nil {
+		return err, nil
+	}
+
+	resp, err := client.Post(url, "application/json", bytes.NewReader(body))
+	if err != nil {
+		return err, nil
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("request indexer failed: %d", resp.StatusCode), nil
+	}
+
+	var result []string
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return err, nil
+	}
+
+	return nil, result
 }

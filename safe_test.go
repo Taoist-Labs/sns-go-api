@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-const apiUrl = "https://test-sns-api.seedao.tech"
+const safeHost = "https://test-sns-api.seedao.tech"
 
 func TestIsSafe(t *testing.T) {
 	tests := []struct {
@@ -15,7 +15,7 @@ func TestIsSafe(t *testing.T) {
 		{"xxxx.seedao", false},
 	}
 	for _, tt := range tests {
-		if got := IsSafe(tt.sns, apiUrl); got != tt.want {
+		if got := IsSafe(tt.sns, safeHost); got != tt.want {
 			t.Errorf("IsSafe(%s)'s result: %v, want: %v", tt.sns, got, tt.want)
 		}
 	}
@@ -31,7 +31,7 @@ func TestSafe(t *testing.T) {
 		{[]string{"baiyu.seedao", "vitalik.seedao"}, []string{"baiyu.seedao", ""}},
 	}
 	for _, tt := range tests {
-		got := Safe(tt.sns, apiUrl)
+		got := Safe(tt.sns, safeHost)
 
 		if len(got) != len(tt.want) {
 			t.Errorf("IsSafe(%s)'s result: %v, want: %v", tt.sns, got, tt.want)
@@ -54,7 +54,7 @@ func TestIsAvailable(t *testing.T) {
 		{"abcd.seedao", true},
 	}
 	for _, tt := range tests {
-		if got := IsAvailable(tt.sns, apiUrl); got != tt.want {
+		if got := IsAvailable(tt.sns, safeHost); got != tt.want {
 			t.Errorf("IsAvailable(%s)'s result: %v, want: %v", tt.sns, got, tt.want)
 		}
 	}
@@ -70,7 +70,7 @@ func TestAvailable(t *testing.T) {
 		{[]string{"baiyu.seedao", "abcd.seedao"}, []string{"", "abcd.seedao"}},
 	}
 	for _, tt := range tests {
-		got := Available(tt.sns, apiUrl)
+		got := Available(tt.sns, safeHost)
 
 		if len(got) != len(tt.want) {
 			t.Errorf("IsSafe(%s)'s result: %v, want: %v", tt.sns, got, tt.want)

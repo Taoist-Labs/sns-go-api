@@ -8,24 +8,24 @@ import (
 	"net/http"
 )
 
-func IsSafe(name, apiUrl string) bool {
-	return checkReq(fmt.Sprintf("%s/v1/is_sensitive", apiUrl), name)
+func IsSafe(name, safeHost string) bool {
+	return checkReq(fmt.Sprintf("%s/v1/is_sensitive?word=%s", safeHost, name))
 }
 
-func Safe(name []string, apiUrl string) []string {
-	return replaceReq(fmt.Sprintf("%s/v1/sensitive", apiUrl), name)
+func Safe(name []string, safeHost string) []string {
+	return replaceReq(fmt.Sprintf("%s/v1/sensitive", safeHost), name)
 }
 
-func IsAvailable(name, apiUrl string) bool {
-	return checkReq(fmt.Sprintf("%s/v1/is_unavailable", apiUrl), name)
+func IsAvailable(name, safeHost string) bool {
+	return checkReq(fmt.Sprintf("%s/v1/is_unavailable?word=%s", safeHost, name))
 }
 
-func Available(name []string, apiUrl string) []string {
-	return replaceReq(fmt.Sprintf("%s/v1/unavailable", apiUrl), name)
+func Available(name []string, safeHost string) []string {
+	return replaceReq(fmt.Sprintf("%s/v1/unavailable", safeHost), name)
 }
 
-func checkReq(url, word string) (result bool) {
-	resp, err := http.Get(fmt.Sprintf("%s?word=%s", url, word))
+func checkReq(url string) (result bool) {
+	resp, err := http.Get(url)
 	if err != nil {
 		return
 	}
@@ -49,13 +49,8 @@ func replaceReq(url string, param []string) (result []string) {
 	if err != nil {
 		return
 	}
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
-	if err != nil {
-		return
-	}
-	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Post(url, "application/json", bytes.NewReader(body))
 	if err != nil {
 		return
 	}
