@@ -71,7 +71,7 @@ func Resolve(sns, indexerHost, rpc, publicResolverAddr string) (addr string) {
 	if err != nil {
 		return ""
 	}
-	s, err := snsgen.NewSns(common.HexToAddress(publicResolverAddr), c)
+	s, err := snsgen.NewPublicResolver(common.HexToAddress(publicResolverAddr), c)
 	if err != nil {
 		return ""
 	}
@@ -150,7 +150,7 @@ func Name(addr, indexerHost, rpc, publicResolverAddr string) (sns string) {
 	if err != nil {
 		return ""
 	}
-	s, err := snsgen.NewSns(common.HexToAddress(publicResolverAddr), c)
+	s, err := snsgen.NewPublicResolver(common.HexToAddress(publicResolverAddr), c)
 	if err != nil {
 		return ""
 	}
@@ -214,6 +214,42 @@ func Names(addr []string, indexerHost, rpc, publicResolverAddr string) (sns []st
 		sns = append(sns, r.Outputs.(*nameOutput).Name)
 	}
 	return
+}
+
+func TokenId(sns, indexerHost, rpc, baseRegistrarAddr string) string {
+	err, resp := getTimeout(fmt.Sprintf("%s/sns/by_name?name=%s", indexerHost, sns))
+	if err == nil {
+		var res struct {
+			TokenId string `json:"tokenId"`
+		}
+		err = json.Unmarshal([]byte(resp), &res)
+		if err == nil {
+			return res.TokenId
+		}
+	}
+
+	c, err := ethclient.Dial(rpc)
+	if err != nil {
+		return ""
+	}
+
+	s, err := snsgen.NewBaseRegistrar(common.HexToAddress(baseRegistrarAddr), c)
+	if err != nil {
+		return ""
+	}
+
+	node := namehash.Namehash(sns)
+	// convert 'namehash' result to [32]bytes
+	b, _ := common.ParseHexOrString(node)
+	nb := [32]byte{}
+	copy(nb[:], b)
+
+	tokenId, err := s.NodeToTokenId(nil, nb)
+	if err != nil {
+		return ""
+	}
+
+	return tokenId.String()
 }
 
 func getTimeout(url string) (error, string) {

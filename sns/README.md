@@ -10,5 +10,6 @@ and then execute code generation:
 
 ```
 $ cd sns
-$ abigen --abi public_resolver.json --pkg sns --type sns --out public_resolver.go
+$ abigen --abi public_resolver.json --pkg sns --type publicResolver --out public_resolver.go
+$ abigen --abi base_registrar.json --pkg sns --type baseRegistrar --out base_registrar.go
 ```
