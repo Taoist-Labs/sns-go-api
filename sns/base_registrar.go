@@ -30,7 +30,7 @@ var (
 
 // BaseRegistrarMetaData contains all meta data concerning the BaseRegistrar contract.
 var BaseRegistrarMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"nodeToTokenId\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"labelToTokenId\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]",
 }
 
 // BaseRegistrarABI is the input ABI used to generate the binding from.
@@ -179,12 +179,12 @@ func (_BaseRegistrar *BaseRegistrarTransactorRaw) Transact(opts *bind.TransactOp
 	return _BaseRegistrar.Contract.contract.Transact(opts, method, params...)
 }
 
-// NodeToTokenId is a free data retrieval call binding the contract method 0x41cf3291.
+// LabelToTokenId is a free data retrieval call binding the contract method 0xbd2c89a7.
 //
-// Solidity: function nodeToTokenId(bytes32 ) view returns(uint256)
-func (_BaseRegistrar *BaseRegistrarCaller) NodeToTokenId(opts *bind.CallOpts, arg0 [32]byte) (*big.Int, error) {
+// Solidity: function labelToTokenId(bytes32 ) view returns(uint256)
+func (_BaseRegistrar *BaseRegistrarCaller) LabelToTokenId(opts *bind.CallOpts, arg0 [32]byte) (*big.Int, error) {
 	var out []interface{}
-	err := _BaseRegistrar.contract.Call(opts, &out, "nodeToTokenId", arg0)
+	err := _BaseRegistrar.contract.Call(opts, &out, "labelToTokenId", arg0)
 
 	if err != nil {
 		return *new(*big.Int), err
@@ -196,16 +196,16 @@ func (_BaseRegistrar *BaseRegistrarCaller) NodeToTokenId(opts *bind.CallOpts, ar
 
 }
 
-// NodeToTokenId is a free data retrieval call binding the contract method 0x41cf3291.
+// LabelToTokenId is a free data retrieval call binding the contract method 0xbd2c89a7.
 //
-// Solidity: function nodeToTokenId(bytes32 ) view returns(uint256)
-func (_BaseRegistrar *BaseRegistrarSession) NodeToTokenId(arg0 [32]byte) (*big.Int, error) {
-	return _BaseRegistrar.Contract.NodeToTokenId(&_BaseRegistrar.CallOpts, arg0)
+// Solidity: function labelToTokenId(bytes32 ) view returns(uint256)
+func (_BaseRegistrar *BaseRegistrarSession) LabelToTokenId(arg0 [32]byte) (*big.Int, error) {
+	return _BaseRegistrar.Contract.LabelToTokenId(&_BaseRegistrar.CallOpts, arg0)
 }
 
-// NodeToTokenId is a free data retrieval call binding the contract method 0x41cf3291.
+// LabelToTokenId is a free data retrieval call binding the contract method 0xbd2c89a7.
 //
-// Solidity: function nodeToTokenId(bytes32 ) view returns(uint256)
-func (_BaseRegistrar *BaseRegistrarCallerSession) NodeToTokenId(arg0 [32]byte) (*big.Int, error) {
-	return _BaseRegistrar.Contract.NodeToTokenId(&_BaseRegistrar.CallOpts, arg0)
+// Solidity: function labelToTokenId(bytes32 ) view returns(uint256)
+func (_BaseRegistrar *BaseRegistrarCallerSession) LabelToTokenId(arg0 [32]byte) (*big.Int, error) {
+	return _BaseRegistrar.Contract.LabelToTokenId(&_BaseRegistrar.CallOpts, arg0)
 }

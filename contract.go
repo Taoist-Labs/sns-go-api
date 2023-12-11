@@ -13,6 +13,7 @@ import (
 	snsgen "github.com/Taoist-Labs/sns-go-api/sns"
 	namehash "github.com/Taoist-Labs/sns-go-namehash"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/forta-network/go-multicall"
 )
@@ -238,13 +239,8 @@ func TokenId(sns, indexerHost, rpc, baseRegistrarAddr string) string {
 		return ""
 	}
 
-	node := namehash.Namehash(sns)
-	// convert 'namehash' result to [32]bytes
-	b, _ := common.ParseHexOrString(node)
-	nb := [32]byte{}
-	copy(nb[:], b)
-
-	tokenId, err := s.NodeToTokenId(nil, nb)
+	label := crypto.Keccak256([]byte(strings.ReplaceAll(sns, ".seedao", "")))
+	tokenId, err := s.LabelToTokenId(nil, [32]byte(label))
 	if err != nil {
 		return ""
 	}

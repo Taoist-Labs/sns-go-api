@@ -5,8 +5,8 @@ import "testing"
 const (
 	rpc                = "https://eth-goerli.g.alchemy.com/v2/MATWeLJN1bEGTjSmtyLedn0i34o1ISLD"
 	indexerHost        = "https://test-spp-indexer.seedao.tech"
-	publicResolverAddr = "0x01578E194eB8789EA1eeC88CDf8C70B879ad2766"
-	baseRegistrarAddr  = "0x620d50BEFB7471b574D225E0C90985520e7dd3fE"
+	publicResolverAddr = "0x6A80eA63cFfc6B10B764e1f26348832835520646"
+	baseRegistrarAddr  = "0x4C53Ff1A6a47E7089e1E727f83e7b7aEFCC9796B"
 )
 
 func TestName(t *testing.T) {
@@ -147,6 +147,5 @@ func TestTokenId(t *testing.T) {
 		if got := TokenId(tt.sns, "", rpc, baseRegistrarAddr); got != tt.want {
 			t.Errorf("Query Contract Success: TokenId(%s)'s result: %v, want: %v", tt.sns, got, tt.want)
 		}
-
 	}
 }

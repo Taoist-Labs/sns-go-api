@@ -7,7 +7,7 @@
       "type": "bytes32"
     }
   ],
-  "name": "nodeToTokenId",
+  "name": "labelToTokenId",
   "outputs": [
     {
       "internalType": "uint256",
